@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { User, UserStatus } from '@chat/api-interfaces';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
   private readonly users: Map<string, User> = new Map();
 
   public initBots(bots: User[]): void {
@@ -31,6 +32,8 @@ export class UsersService {
     const user = this.users.get(id);
     if (user) {
       this.users.set(id, { ...user, status });
+    } else {
+      this.logger.warn(`Unable to update user status. User with id "${id}" does not exist.`);
     }
   }
 }
