@@ -2,8 +2,8 @@ import { Message, UserType } from '@chat/api-interfaces';
 import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { BotEvents, BotReplyEvent } from '../shared/events/bot.events';
-import { MessageEvents } from '../shared/events/message.events';
+import { BotEvents, BotReplyEvent } from '../../shared/events/bot.events';
+import { MessageEvents } from '../../shared/events/message.events';
 
 type ConversationKey = `${string}:${string}`;
 
