@@ -6,6 +6,12 @@ export interface User {
   type: UserTypes;
 }
 
+export interface UserHandshakeAuth {
+  id?: string;
+  name: string;
+  avatarUrl: string;
+}
+
 // as const instead of enum: gives both a runtime object (iteration for validation/options)
 // and a derived union-tip — without the drawbacks of enum (extra runtime code, not erased).
 export const UserStatuses = {

@@ -4,6 +4,7 @@ import { UsersService } from '../users/users.service';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { BotBusEvents, BotReplyEvent } from '../../shared/events/bot.events';
 import { MessageBusEvents } from '../../shared/events/message.events';
+import { UserBusEvents, UserDisconnectedEvent } from '../../shared/events/user.events';
 
 type ConversationKey = `${string}:${string}`;
 
@@ -47,5 +48,19 @@ export class MessagesService {
   @OnEvent(BotBusEvents.REPLY)
   public handleBotReplyEvent({ botId, recipientId, content}: BotReplyEvent): void {
     this.create(botId, recipientId, content);
+  }
+
+  @OnEvent(UserBusEvents.DISCONNECTED)
+  public handleUserDisconnectedEvent({ userId }: UserDisconnectedEvent): void {
+    this.purgeConversations(userId);
+  }
+
+  private purgeConversations(userId: string): void {
+    for (const key of this.conversations.keys()) {
+      const [a, b] = key.split(':');
+      if (a === userId || b === userId) {
+        this.conversations.delete(key);
+      }
+    }
   }
 }
