@@ -1,6 +1,6 @@
-export const BotEvents = {
-  Receive: 'bot.receive',
-  Reply: 'bot.reply',
+export const BotEvent = {
+  RECEIVE: 'bot.receive',
+  REPLY: 'bot.reply',
 } as const;
 
 export interface BotReplyEvent {
