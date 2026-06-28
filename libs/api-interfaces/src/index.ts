@@ -1,2 +1,2 @@
 export * from './lib/models/index';
-export * from './lib/payloads/index';
+export * from './lib/events/index';
