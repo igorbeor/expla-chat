@@ -1,3 +1,3 @@
-export const MessageEvent = {
+export const MessageEvents = {
   DELIVER: 'message.deliver',
 } as const;

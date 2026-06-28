@@ -2,20 +2,20 @@ export interface User {
   id: string;         // uuid assigned by the server
   name: string;
   avatarUrl: string;
-  status: UserStatus;
-  type: UserType;
+  status: UserStatuses;
+  type: UserTypes;
 }
 
 // as const instead of enum: gives both a runtime object (iteration for validation/options)
 // and a derived union-tip — without the drawbacks of enum (extra runtime code, not erased).
-export const UserStatus = {
+export const UserStatuses = {
   ONLINE: 'online',
   AWAY: 'away',
 } as const;
-export type UserStatus = typeof UserStatus[keyof typeof UserStatus];
+export type UserStatuses = typeof UserStatuses[keyof typeof UserStatuses];
 
-export const UserType = {
+export const UserTypes = {
   USER: 'user',
   BOT: 'bot',
 } as const;
-export type UserType = typeof UserType[keyof typeof UserType];
+export type UserTypes = typeof UserTypes[keyof typeof UserTypes];

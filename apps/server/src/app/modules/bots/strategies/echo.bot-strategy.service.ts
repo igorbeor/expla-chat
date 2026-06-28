@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { BotStrategy } from '../interfaces/bot-strategy.interface';
-import { BotType } from '../enums/bot-types.enum';
+import { BotTypes } from '../enums/bot-types.enum';
 import { Message } from '@chat/api-interfaces';
 import { Subject } from 'rxjs';
 import { BotOutgoing } from '../interfaces/bot-outgoing.interface';
 
 @Injectable()
 export class EchoBotStrategyService implements BotStrategy {
-  public readonly type = BotType.ECHO;
+  public readonly type = BotTypes.ECHO;
   
   private readonly _message$ = new Subject<BotOutgoing>();
   public readonly message$ = this._message$.asObservable();

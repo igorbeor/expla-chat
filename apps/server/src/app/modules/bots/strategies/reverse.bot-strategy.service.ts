@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { BotType } from '../enums/bot-types.enum';
+import { BotTypes } from '../enums/bot-types.enum';
 import { BotStrategy } from '../interfaces/bot-strategy.interface';
 import { Message } from '@chat/api-interfaces';
 import { Subject, delay } from 'rxjs';
@@ -7,7 +7,7 @@ import { BotOutgoing } from '../interfaces/bot-outgoing.interface';
 
 @Injectable()
 export class ReverseBotStrategyService implements BotStrategy {
-  public readonly type = BotType.REVERSE;
+  public readonly type = BotTypes.REVERSE;
   private readonly delay = 3000;
 
   private readonly _message$ = new Subject<BotOutgoing>();

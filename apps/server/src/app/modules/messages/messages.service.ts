@@ -1,9 +1,9 @@
-import { Message, UserType } from '@chat/api-interfaces';
+import { Message, UserTypes } from '@chat/api-interfaces';
 import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { BotEvent, BotReplyEvent } from '../../shared/events/bot.events';
-import { MessageEvent } from '../../shared/events/message.events';
+import { BotEvents, BotReplyEvent } from '../../shared/events/bot.events';
+import { MessageEvents } from '../../shared/events/message.events';
 
 type ConversationKey = `${string}:${string}`;
 
@@ -30,10 +30,10 @@ export class MessagesService {
     }
     this.conversations.set(conversationKey, [...messages, message]);
 
-    if (this.usersService.get(recipientId)?.type === UserType.BOT) {
-      this.eventEmitter.emit(BotEvent.RECEIVE, message);
+    if (this.usersService.get(recipientId)?.type === UserTypes.BOT) {
+      this.eventEmitter.emit(BotEvents.RECEIVE, message);
     } else {
-      this.eventEmitter.emit(MessageEvent.DELIVER, message);
+      this.eventEmitter.emit(MessageEvents.DELIVER, message);
     }
 
     return message;
@@ -44,7 +44,7 @@ export class MessagesService {
     return this.conversations.get(conversationKey) ?? [];
   }
 
-  @OnEvent(BotEvent.REPLY)
+  @OnEvent(BotEvents.REPLY)
   public handleBotReplyEvent({ botId, recipientId, content}: BotReplyEvent): void {
     this.create(botId, recipientId, content);
   }

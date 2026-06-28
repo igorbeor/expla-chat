@@ -1,12 +1,12 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import { BotType } from '../enums/bot-types.enum';
+import { BotTypes } from '../enums/bot-types.enum';
 import { BotStrategy } from '../interfaces/bot-strategy.interface';
 import { defer, repeat, Subject, takeUntil, timer } from 'rxjs';
 import { BotOutgoing } from '../interfaces/bot-outgoing.interface';
 
 @Injectable()
 export class SpamBotStrategyService implements BotStrategy, OnModuleDestroy {
-  public readonly type = BotType.SPAM;
+  public readonly type = BotTypes.SPAM;
 
   private readonly _message$ = new Subject<BotOutgoing>();
   public readonly message$ = this._message$.asObservable();

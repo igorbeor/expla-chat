@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { User, UserStatus } from '@chat/api-interfaces';
+import { User, UserStatuses } from '@chat/api-interfaces';
 
 @Injectable()
 export class UsersService {
@@ -28,7 +28,7 @@ export class UsersService {
     return [...this.users.values()];
   }
 
-  public updateStatus(id: string, status: UserStatus): void {
+  public updateStatus(id: string, status: UserStatuses): void {
     const user = this.users.get(id);
     if (user) {
       this.users.set(id, { ...user, status });

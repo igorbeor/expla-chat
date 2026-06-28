@@ -4,11 +4,11 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
-import { BotType } from './enums/bot-types.enum';
+import { BotTypes } from './enums/bot-types.enum';
 import { UsersService } from '../users/users.service';
-import { Message, User, UserStatus, UserType } from '@chat/api-interfaces';
-import { BotName } from './enums/bot-names.enum';
-import { BotEvent, BotReplyEvent } from '../../shared/events/bot.events';
+import { Message, User, UserStatuses, UserTypes } from '@chat/api-interfaces';
+import { BotNames } from './enums/bot-names.enum';
+import { BotEvents, BotReplyEvent } from '../../shared/events/bot.events';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { BotsRegistryService } from './bots.registry.service';
 import { Subject, takeUntil } from 'rxjs';
@@ -17,8 +17,8 @@ import { Subject, takeUntil } from 'rxjs';
 export class BotsService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(BotsService.name);
 
-  private readonly botTypeById: Map<string, BotType> = new Map();
-  private readonly botIdByType: Map<BotType, string> = new Map();
+  private readonly botTypeById: Map<string, BotTypes> = new Map();
+  private readonly botIdByType: Map<BotTypes, string> = new Map();
 
   private readonly destroy$ = new Subject<void>();
 
@@ -40,13 +40,13 @@ export class BotsService implements OnModuleInit, OnModuleDestroy {
   }
 
   private createBots(): void {
-    const bots: User[] = Object.values(BotType).map((botType: BotType) => {
+    const bots: User[] = Object.values(BotTypes).map((botType: BotTypes) => {
       const bot: User = {
         id: crypto.randomUUID(),
-        name: BotName[botType],
+        name: BotNames[botType],
         avatarUrl: 'https://api.dicebear.com/10.x/bottts/svg',
-        status: UserStatus.ONLINE,
-        type: UserType.BOT,
+        status: UserStatuses.ONLINE,
+        type: UserTypes.BOT,
       };
       this.botTypeById.set(bot.id, botType);
       this.botIdByType.set(botType, bot.id);
@@ -78,7 +78,7 @@ export class BotsService implements OnModuleInit, OnModuleDestroy {
     } else {
       const users = this.usersService
         .getAll()
-        .filter(({ type }) => type === UserType.USER);
+        .filter(({ type }) => type === UserTypes.USER);
       this.dispatchMultipleReply(botId, users, content);
     }
   }
@@ -93,7 +93,7 @@ export class BotsService implements OnModuleInit, OnModuleDestroy {
       recipientId,
       content,
     };
-    this.eventEmitter.emit(BotEvent.REPLY, payload);
+    this.eventEmitter.emit(BotEvents.REPLY, payload);
   }
 
   private dispatchMultipleReply(
@@ -107,11 +107,11 @@ export class BotsService implements OnModuleInit, OnModuleDestroy {
         recipientId: user.id,
         content,
       };
-      this.eventEmitter.emit(BotEvent.REPLY, payload);
+      this.eventEmitter.emit(BotEvents.REPLY, payload);
     });
   }
 
-  @OnEvent(BotEvent.RECEIVE)
+  @OnEvent(BotEvents.RECEIVE)
   handleBotReceiveEvent(message: Message) {
     const botType = this.botTypeById.get(message.recipientId);
     if (botType) {
