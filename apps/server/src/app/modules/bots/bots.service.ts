@@ -8,7 +8,7 @@ import { BotTypes } from './enums/bot-types.enum';
 import { UsersService } from '../users/users.service';
 import { Message, User, UserStatuses, UserTypes } from '@chat/api-interfaces';
 import { BotNames } from './enums/bot-names.enum';
-import { BotEvents, BotReplyEvent } from '../../shared/events/bot.events';
+import { BotBusEvents, BotReplyEvent } from '../../shared/events/bot.events';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { BotsRegistryService } from './bots.registry.service';
 import { Subject, takeUntil } from 'rxjs';
@@ -93,7 +93,7 @@ export class BotsService implements OnModuleInit, OnModuleDestroy {
       recipientId,
       content,
     };
-    this.eventEmitter.emit(BotEvents.REPLY, payload);
+    this.eventEmitter.emit(BotBusEvents.REPLY, payload);
   }
 
   private dispatchMultipleReply(
@@ -107,11 +107,11 @@ export class BotsService implements OnModuleInit, OnModuleDestroy {
         recipientId: user.id,
         content,
       };
-      this.eventEmitter.emit(BotEvents.REPLY, payload);
+      this.eventEmitter.emit(BotBusEvents.REPLY, payload);
     });
   }
 
-  @OnEvent(BotEvents.RECEIVE)
+  @OnEvent(BotBusEvents.RECEIVE)
   handleBotReceiveEvent(message: Message) {
     const botType = this.botTypeById.get(message.recipientId);
     if (botType) {

@@ -1,4 +1,4 @@
-export const BotEvents = {
+export const BotBusEvents = {
   RECEIVE: 'bot.receive',
   REPLY: 'bot.reply',
 } as const;
