@@ -4,6 +4,9 @@ import { BotStrategy } from '../interfaces/bot-strategy.interface';
 import { defer, repeat, Subject, takeUntil, timer } from 'rxjs';
 import { BotOutgoing } from '../interfaces/bot-outgoing.interface';
 
+const MIN_INTERVAL_MS = 10_000;
+const MAX_INTERVAL_MS = 120_000;
+
 @Injectable()
 export class SpamBotStrategyService implements BotStrategy, OnModuleDestroy {
   public readonly type = BotTypes.SPAM;
@@ -48,7 +51,7 @@ export class SpamBotStrategyService implements BotStrategy, OnModuleDestroy {
     return this.phrases[randomIndex];
   }
 
-  private getRandomIntervalMs(minMs = 10_000, maxMs = 120_000): number {
+  private getRandomIntervalMs(minMs = MIN_INTERVAL_MS, maxMs = MAX_INTERVAL_MS): number {
     const randomMs =
       Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
 
