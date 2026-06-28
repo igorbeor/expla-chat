@@ -6,3 +6,4 @@ export const BotNames = {
   [BotTypes.IGNORE]: 'Ignore Bot',
   [BotTypes.SPAM]: 'Spam Bot',
 } as const;
+export type BotNames = (typeof BotNames)[keyof typeof BotNames];
