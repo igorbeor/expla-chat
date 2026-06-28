@@ -1,6 +1,6 @@
 import { Message } from '../models';
 
-export interface MessageSendEvent {
+export interface MessageSendRequest {
   recipientId: string;
   content: string;
 }

@@ -5,7 +5,7 @@ import { IsOptional, IsUrl, IsUUID, Length } from "class-validator";
 export class UserHandshakeAuthDto implements UserHandshakeAuth {
   @IsOptional()
   @IsUUID()
-  id?: string;
+  id?: string | undefined;
 
   @Transform(({ value }) => value?.trim())
   @Length(1, 150)

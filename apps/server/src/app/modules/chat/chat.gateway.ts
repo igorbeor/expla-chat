@@ -1,5 +1,4 @@
 import {
-  Ack,
   ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
@@ -8,11 +7,19 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger } from '@nestjs/common';
+import {
+  Logger,
+  UseInterceptors,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import {
+  ConversationEvents,
+  ConversationHistoryResponse,
   Message,
   MessageEvents,
   PresenceDisconnectedEvent,
@@ -38,9 +45,21 @@ import { StatusChangeDto } from './dto/status-change.dto';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { UserHandshakeAuthDto } from './dto/user-handshake-auth.dto';
+import { ConversationHistoryDto } from './dto/conversation-history.dto';
+import { AckEnvelopeInterceptor } from './interceptors/ack-envelope-interceptor.interceptor';
 
 const GRACE_MS = 10_000;
 
+@UsePipes(
+  new ValidationPipe({
+    transform: true,
+    whitelist: true,
+    exceptionFactory: (errors) =>
+      new WsException(
+        errors.flatMap((e) => Object.values(e.constraints ?? {})).join('; '),
+      ),
+  }),
+)
 @WebSocketGateway({
   cors: { origin: 'http://localhost:4200', credentials: true },
 })
@@ -67,26 +86,29 @@ export class ChatGateway
       // handshake must carry name + avatarUrl, otherwise reject the socket.
       const dto = plainToInstance(UserHandshakeAuthDto, socket.handshake.auth);
       const errors = await validate(dto);
-      socket.handshake.auth = {...dto};
-      return errors.length ? next(new Error('Invalid handshake')) : next();
+      if (errors.length) {
+        return next(new Error('Invalid handshake'));
+      }
+      socket.handshake.auth = { ...dto };
+      return next();
     });
   }
 
-  public handleConnection(client: Socket): void {
+  public handleConnection(socket: Socket): void {
     const {
       name,
       avatarUrl,
       id: userId,
-    } = client.handshake.auth as UserHandshakeAuth;
+    } = socket.handshake.auth as UserHandshakeAuth;
 
     // RECONNECT: a known userId that still exists within the grace window.
     if (userId && this.pendingRemovals.has(userId)) {
-      this.reconnectUser(client, userId);
+      this.reconnectUser(socket, userId);
       return;
     }
 
     // NEW USER: handshake carry name + avatarUrl.
-    this.connectNewUser(client, name, avatarUrl);
+    this.connectNewUser(socket, name, avatarUrl);
   }
 
   public handleDisconnect(socket: Socket): void {
@@ -109,26 +131,14 @@ export class ChatGateway
     this.pendingRemovals.set(userId, timer);
   }
 
+  @UseInterceptors(AckEnvelopeInterceptor)
   @SubscribeMessage(MessageEvents.SEND)
   public handleMessageSend(
     @MessageBody() dto: MessageSendDto,
     @ConnectedSocket() socket: Socket,
-    @Ack() ack?: (message: Message) => void,
-  ): void {
-    const senderId = this.userIdBySocketId.get(socket.id);
-    if (!senderId) {
-      this.logger.warn(
-        `Dropping ${MessageEvents.SEND} from unbound socket ${socket.id}.`,
-      );
-      return;
-    }
-
-    const message = this.messagesService.create(
-      senderId,
-      dto.recipientId,
-      dto.content,
-    );
-    ack?.(message);
+  ): Message {
+    const senderId = this.requireUserId(socket);
+    return this.messagesService.create(senderId, dto.recipientId, dto.content);
   }
 
   @SubscribeMessage(StatusEvents.CHANGE)
@@ -138,9 +148,6 @@ export class ChatGateway
   ): void {
     const userId = this.userIdBySocketId.get(socket.id);
     if (!userId) {
-      this.logger.warn(
-        `Dropping ${StatusEvents.CHANGE} from unbound socket ${socket.id}.`,
-      );
       return;
     }
 
@@ -148,6 +155,22 @@ export class ChatGateway
 
     const payload: StatusChangedEvent = { userId, status: dto.status };
     socket.broadcast.emit(StatusEvents.CHANGED, payload);
+  }
+
+  @UseInterceptors(AckEnvelopeInterceptor)
+  @SubscribeMessage(ConversationEvents.HISTORY)
+  public handleConversationHistory(
+    @MessageBody() { interlocutorId, limit, before }: ConversationHistoryDto,
+    @ConnectedSocket() socket: Socket,
+  ): ConversationHistoryResponse {
+    const userId = this.requireUserId(socket);
+
+    return this.messagesService.getConversationPage(
+      userId,
+      interlocutorId,
+      limit,
+      before,
+    );
   }
 
   @OnEvent(MessageBusEvents.DELIVER)
@@ -168,25 +191,25 @@ export class ChatGateway
     this.userIdBySocketId.set(socketId, userId);
   }
 
-  private reconnectUser(client: Socket, userId: string): void {
+  private reconnectUser(socket: Socket, userId: string): void {
     const pending = this.pendingRemovals.get(userId);
     if (pending) {
       clearTimeout(pending);
       this.pendingRemovals.delete(userId);
     }
 
-    this.bindSocket(userId, client.id);
+    this.bindSocket(userId, socket.id);
 
     // Re-emit the current view to the reconnected socket; do NOT broadcast joined.
     const initPayload: PresenceInitEvent = {
       selfId: userId,
       contacts: this.usersService.getAll().filter((u) => u.id !== userId),
     };
-    client.emit(PresenceEvents.INIT, initPayload);
+    socket.emit(PresenceEvents.INIT, initPayload);
   }
 
   private connectNewUser(
-    client: Socket,
+    socket: Socket,
     name: string,
     avatarUrl: string,
   ): void {
@@ -199,16 +222,16 @@ export class ChatGateway
     };
 
     this.usersService.add(user);
-    this.bindSocket(user.id, client.id);
+    this.bindSocket(user.id, socket.id);
 
     const initPayload: PresenceInitEvent = {
       selfId: user.id,
       contacts: this.usersService.getAll().filter((u) => u.id !== user.id),
     };
-    client.emit(PresenceEvents.INIT, initPayload);
+    socket.emit(PresenceEvents.INIT, initPayload);
 
     const joinedPayload: PresenceJoinedEvent = user;
-    client.broadcast.emit(PresenceEvents.JOINED, joinedPayload);
+    socket.broadcast.emit(PresenceEvents.JOINED, joinedPayload);
   }
 
   private disconnectUser(userId: string): void {
@@ -226,5 +249,14 @@ export class ChatGateway
     }
     this.socketIdByUserId.delete(userId);
     this.pendingRemovals.delete(userId);
+  }
+
+  private requireUserId(socket: Socket): string {
+    const userId = this.userIdBySocketId.get(socket.id);
+    if (!userId) {
+      this.logger.warn(`Unbound socket ${socket.id}.`);
+      throw new WsException('Unbound socket');
+    }
+    return userId;
   }
 }
