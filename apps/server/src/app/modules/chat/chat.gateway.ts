@@ -47,8 +47,8 @@ import { validate } from 'class-validator';
 import { UserHandshakeAuthDto } from './dto/user-handshake-auth.dto';
 import { ConversationHistoryDto } from './dto/conversation-history.dto';
 import { AckEnvelopeInterceptor } from './interceptors/ack-envelope-interceptor.interceptor';
-
-const GRACE_MS = 10_000;
+import { ConfigService } from '@nestjs/config';
+import { EnvironmentVariables } from '../../config/env.validation';
 
 @UsePipes(
   new ValidationPipe({
@@ -60,9 +60,7 @@ const GRACE_MS = 10_000;
       ),
   }),
 )
-@WebSocketGateway({
-  cors: { origin: 'http://localhost:4200', credentials: true },
-})
+@WebSocketGateway()
 export class ChatGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
@@ -75,11 +73,16 @@ export class ChatGateway
   private readonly userIdBySocketId: Map<string, string> = new Map();
   private readonly pendingRemovals: Map<string, NodeJS.Timeout> = new Map();
 
+  private readonly graceMs: number;
+
   constructor(
     private readonly usersService: UsersService,
     private readonly messagesService: MessagesService,
     private readonly eventEmitter: EventEmitter2,
-  ) {}
+    private readonly config: ConfigService<EnvironmentVariables, true>,
+  ) {
+    this.graceMs = this.config.get('GRACE_MS', { infer: true });
+  }
 
   public afterInit(server: Server) {
     server.use(async (socket, next) => {
@@ -126,7 +129,7 @@ export class ChatGateway
 
     const timer = setTimeout(() => {
       this.disconnectUser(userId);
-    }, GRACE_MS);
+    }, this.graceMs);
 
     this.pendingRemovals.set(userId, timer);
   }

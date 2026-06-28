@@ -2,6 +2,16 @@
   "name": "expla-chat",
   "version": "0.0.0",
   "private": true,
+  "scripts": {
+    "start": "nx run-many -t serve -p server client",
+    "start:server": "nx serve server",
+    "start:client": "nx serve client",
+    "build": "nx run-many -t build -p server client",
+    "build:server": "nx build server",
+    "build:client": "nx build client",
+    "test": "nx run-many -t test",
+    "lint": "nx run-many -t lint"
+  },
   "devDependencies": {
     "@angular-devkit/core": "~21.2.0",
     "@angular-devkit/schematics": "~21.2.0",
@@ -54,6 +64,7 @@
     "@angular/platform-browser": "~21.2.0",
     "@angular/router": "~21.2.0",
     "@nestjs/common": "^11.0.0",
+    "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.0",
     "@nestjs/event-emitter": "^3.1.0",
     "@nestjs/platform-express": "^11.0.0",
