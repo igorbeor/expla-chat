@@ -112,6 +112,23 @@ export class MessagesService {
     };
   }
 
+  public getLastMessageFromConversation(
+    currentUserId: string,
+    interlocutorId: string,
+  ): Message | null {
+    const conversationKey = this.getConversationKey([
+      currentUserId,
+      interlocutorId,
+    ]);
+    const conversationMessages = this.conversations.get(conversationKey);
+    // Conversation does not exist yet. Return null
+    if (conversationMessages === undefined) {
+      return null;
+    }
+
+    return conversationMessages[conversationMessages.length - 1];
+  }
+
   @OnEvent(BotBusEvents.REPLY)
   public handleBotReplyEvent({
     botId,

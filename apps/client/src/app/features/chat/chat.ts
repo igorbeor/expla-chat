@@ -37,8 +37,7 @@ export class Chat {
   private readonly contacts = inject(ContactsService);
   private readonly session = inject(SessionService);
 
-  private readonly stream =
-    viewChild<ElementRef<HTMLElement>>('stream');
+  private readonly stream = viewChild<ElementRef<HTMLElement>>('stream');
 
   protected readonly conversation = this.conversationSvc;
   protected readonly selfId = this.session.currentUserId;
@@ -46,7 +45,7 @@ export class Chat {
   protected readonly interlocutor = computed(() => {
     const id = this.conversationSvc.interlocutorId();
     if (id === null) return null;
-    return this.contacts.contacts().find((user) => user.id === id) ?? null;
+    return this.contacts.contacts().find(({ user }) => user.id === id) ?? null;
   });
 
   protected readonly groups = computed<MessageRun[]>(() => {
@@ -86,7 +85,7 @@ export class Chat {
     if (senderId === this.selfId()) {
       return this.session.currentUserData()?.avatarUrl ?? '';
     }
-    return this.interlocutor()?.avatarUrl ?? '';
+    return this.interlocutor()?.user?.avatarUrl ?? '';
   }
 
   protected onSend(content: string): void {
@@ -123,7 +122,8 @@ export class Chat {
 
     if (this.prependFromHeight !== null) {
       // Older page prepended: restore the previous viewport position.
-      el.scrollTop = el.scrollHeight - this.prependFromHeight + this.prependFromTop;
+      el.scrollTop =
+        el.scrollHeight - this.prependFromHeight + this.prependFromTop;
       this.prependFromHeight = null;
       return;
     }

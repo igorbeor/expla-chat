@@ -1,8 +1,8 @@
-import { User } from '../models';
+import { Contact, User } from '../models';
 
 export interface PresenceInitEvent {
   selfId: string;
-  contacts: User[];
+  contacts: Contact[];
 }
 
 export type PresenceJoinedEvent = User;

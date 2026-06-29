@@ -1,5 +1,5 @@
 @if (interlocutor(); as contact) {
-  <app-chat-header [contact]="contact" (back)="onBack()" />
+  <app-chat-header [contact]="contact.user" (back)="onBack()" />
 
   <div #stream class="chat__stream" (scroll)="onScroll()">
     @if (conversation.loading() && groups().length) {

@@ -206,7 +206,10 @@ export class ChatGateway
     // Re-emit the current view to the reconnected socket; do NOT broadcast joined.
     const initPayload: PresenceInitEvent = {
       selfId: userId,
-      contacts: this.usersService.getAll().filter((u) => u.id !== userId),
+      contacts: this.usersService.getAll().filter((u) => u.id !== userId).map(c => ({
+        user: c,
+        lastMessage: this.messagesService.getLastMessageFromConversation(userId, c.id)
+      })),
     };
     socket.emit(PresenceEvents.INIT, initPayload);
   }
@@ -229,7 +232,10 @@ export class ChatGateway
 
     const initPayload: PresenceInitEvent = {
       selfId: user.id,
-      contacts: this.usersService.getAll().filter((u) => u.id !== user.id),
+      contacts: this.usersService.getAll().filter((u) => u.id !== user.id).map(c => ({
+        user: c,
+        lastMessage: this.messagesService.getLastMessageFromConversation(user.id, c.id)
+      })),
     };
     socket.emit(PresenceEvents.INIT, initPayload);
 
