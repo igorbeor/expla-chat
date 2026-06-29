@@ -6,10 +6,13 @@ export interface User {
   type: UserTypes;
 }
 
-export interface UserHandshakeAuth {
-  id?: string;
+export interface UserData {
   name: string;
   avatarUrl: string;
+}
+
+export interface UserHandshakeAuth extends UserData {
+  id?: string;
 }
 
 // as const instead of enum: gives both a runtime object (iteration for validation/options)
