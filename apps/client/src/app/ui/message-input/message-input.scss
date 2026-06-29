@@ -1,6 +1,6 @@
 :host {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--space-2);
   padding: var(--space-1);
   background: var(--color-bg-app);
@@ -42,12 +42,21 @@
   padding: 0;
   border: none;
   border-radius: var(--radius-pill);
-  background: var(--color-accent);
+  background: transparent;
   color: var(--color-accent-contrast);
   cursor: pointer;
   transition:
     background-color 0.15s ease,
     opacity 0.15s ease;
+
+  svg {
+    width: 20px;
+    height: 20px;
+
+    path {
+      fill: var(--color-accent);
+    }
+  }
 }
 
 .message-input__send:disabled {
