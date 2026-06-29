@@ -4,6 +4,8 @@ import {
   MessageEvents,
   PresenceEvents,
   StatusEvents,
+  UserStatuses,
+  type StatusChangeEvent,
   type MessageReceivedEvent,
   type PresenceDisconnectedEvent,
   type PresenceInitEvent,
@@ -14,6 +16,7 @@ import { ContactsService } from '../contacts/contacts.service';
 import { ConversationService } from '../conversation/conversation.service';
 import { SessionService } from '../session/session.service';
 import { SocketService } from '../socket/socket.service';
+import { fromEvent, merge, map, distinctUntilChanged, debounceTime } from 'rxjs';
 
 /**
  * Real-time orchestration: the glue between the transport (SocketService) and
@@ -40,6 +43,7 @@ export class PresenceService {
   private readonly conversation = inject(ConversationService);
 
   constructor() {
+    this.wireVisibility();
     this.socket
       .on<PresenceInitEvent>(PresenceEvents.INIT)
       .pipe(takeUntilDestroyed())
@@ -84,6 +88,29 @@ export class PresenceService {
         );
       }
     });
+  }
+
+  private wireVisibility(): void {
+    const computeStatus = (): UserStatuses =>
+      document.visibilityState === 'visible' && document.hasFocus()
+        ? UserStatuses.ONLINE
+        : UserStatuses.AWAY;
+
+    merge(
+      fromEvent(document, 'visibilitychange'),
+      fromEvent(window, 'focus'),
+      fromEvent(window, 'blur'),
+    )
+      .pipe(
+        map(() => computeStatus()),
+        distinctUntilChanged(),
+        debounceTime(300),                       
+        takeUntilDestroyed(),
+      )
+      .subscribe((status) => {
+        const payload: StatusChangeEvent = { status };
+        this.socket.emit(StatusEvents.CHANGE, payload);
+      });
   }
 
   /** No-op; exists to force eager instantiation from the app initializer. */
