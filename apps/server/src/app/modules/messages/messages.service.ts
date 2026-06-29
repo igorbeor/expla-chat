@@ -33,6 +33,11 @@ export class MessagesService {
     recipientId: string,
     content: string,
   ): Message {
+    const recipient = this.usersService.get(recipientId);
+    if (!recipient) {
+      throw new Error('Recipient not found');
+    }
+
     const conversationKey = this.getConversationKey([senderId, recipientId]);
     const messages = this.conversations.get(conversationKey) ?? [];
 
@@ -46,7 +51,7 @@ export class MessagesService {
     // add new message to the end of conversation messages
     this.conversations.set(conversationKey, [...messages, message]);
 
-    if (this.usersService.get(recipientId)?.type === UserTypes.BOT) {
+    if (recipient.type === UserTypes.BOT) {
       this.eventEmitter.emit(BotBusEvents.RECEIVE, message);
     } else {
       this.eventEmitter.emit(MessageBusEvents.DELIVER, message);
