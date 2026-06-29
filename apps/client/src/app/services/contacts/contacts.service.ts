@@ -19,6 +19,12 @@ export class ContactsService {
 
   public readonly lastMessageByContactId =
     this._lastMessageByContactId.asReadonly();
+  /** Full, unfiltered contact list (e.g. to resolve a contact regardless of search/filter). */
+  public readonly contacts = this._contacts.asReadonly();
+  /** Current search term (reflects the search input). */
+  public readonly search = this._search.asReadonly();
+  /** Current contact filter (reflects the filter toggle). */
+  public readonly filter = this._filter.asReadonly();
   public readonly filteredAndSortedContactsWithLastMessage = computed<
     ContactWithLastMessage[]
   >(() => {
@@ -76,11 +82,9 @@ export class ContactsService {
     contactId: string,
     message: Message,
   ): void {
-    this._lastMessageByContactId.update((lastMessageByContactId) => {
-      return {
-        ...lastMessageByContactId,
-        [contactId]: message,
-      };
+    this._lastMessageByContactId.update((map) => {
+      if (map[contactId]?.id === message.id) return map;
+      return { ...map, [contactId]: message };
     });
   }
 

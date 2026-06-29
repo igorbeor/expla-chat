@@ -12,7 +12,7 @@ import { SessionService } from '../session/session.service';
 import { SocketService } from '../socket/socket.service';
 
 /** How many messages a single history page requests. */
-const HISTORY_PAGE_LIMIT = 30;
+const HISTORY_PAGE_LIMIT = 20;
 
 /**
  * Holds the state of the ONE currently-open conversation. Messages are stored
@@ -66,6 +66,16 @@ export class ConversationService {
   }
 
   /**
+   * Clear the current selection and conversation state. Used by the mobile
+   * back button to return to the contacts list (host loses `.chat-open`).
+   */
+  public closeConversation(): void {
+    this._interlocutorId.set(null);
+    this._messages.set([]);
+    this._hasMore.set(false);
+  }
+
+  /**
    * Load an older page and PREPEND it. No-op when there are no more pages or no
    * messages have been loaded yet.
    */
@@ -100,10 +110,13 @@ export class ConversationService {
     const recipientId = this._interlocutorId();
     if (recipientId === null) return;
 
+    const senderId = this.session.currentUserId();
+    if (senderId === null) return;
+
     const tempId = crypto.randomUUID();
     const optimistic: Message = {
       id: tempId,
-      senderId: this.session.currentUserId() ?? '',
+      senderId,
       recipientId,
       content: trimmed,
       sentAt: new Date().toISOString(),

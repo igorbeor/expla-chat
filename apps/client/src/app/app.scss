@@ -1,0 +1,43 @@
+@use 'breakpoints' as bp;
+
+:host {
+  display: block;
+  height: 100vh;
+  height: 100dvh; /* avoid mobile browser-chrome overflow */
+}
+
+/* Desktop: two columns side by side, both always visible. */
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  height: 100%;
+}
+
+.app-shell__sidebar,
+.app-shell__chat {
+  min-height: 0;
+  min-width: 0;
+}
+
+/* Mobile: a single pane at a time. Sidebar by default; chat when one is open. */
+@media (max-width: bp.$breakpoint-mobile) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell__sidebar {
+    display: flex; /* shown by default */
+  }
+
+  .app-shell__chat {
+    display: none;
+  }
+
+  .app-shell--chat-open .app-shell__sidebar {
+    display: none;
+  }
+
+  .app-shell--chat-open .app-shell__chat {
+    display: flex;
+  }
+}

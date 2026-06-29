@@ -1,13 +1,9 @@
-import {
-  Injectable,
-  inject,
-  signal,
-  type Signal,
-} from '@angular/core';
-import { Observable } from 'rxjs';
+import { Injectable, inject, signal, type Signal } from '@angular/core';
+import { EMPTY, Observable, switchMap } from 'rxjs';
 import { io, type Socket } from 'socket.io-client';
 import type { AckResult, UserHandshakeAuth } from '@chat/api-interfaces';
 import { APP_CONFIG } from '../../../environments/app-config.token';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 /**
  * Connection lifecycle state, derived from socket.io lifecycle events.
@@ -17,7 +13,6 @@ export type ConnectionStatus =
   | 'connecting'
   | 'connected'
   | 'reconnecting';
-
 
 const DEFAULT_RECONNECTION_ATTEMPTS = 5;
 const DEFAULT_RECONNECTION_DELAY = 1000;
@@ -32,12 +27,12 @@ const DEFAULT_ACK_TIMEOUT_MS = 5000;
 export class SocketService {
   private readonly appConfig = inject(APP_CONFIG);
 
-  private socket: Socket | null = null;
+  private readonly _socket = signal<Socket | null>(null);
+  private readonly socket$ = toObservable(this._socket); // creates in injection-context
 
   private readonly _status = signal<ConnectionStatus>('disconnected');
 
-  public readonly status: Signal<ConnectionStatus> =
-    this._status.asReadonly();
+  public readonly status: Signal<ConnectionStatus> = this._status.asReadonly();
 
   /**
    * Creates the socket and connects. On auto-reconnect, socket.io re-sends the
@@ -57,7 +52,7 @@ export class SocketService {
       autoConnect: true,
     });
 
-    this.socket = socket;
+    this._socket.set(socket);
 
     socket.on('connect', () => this._status.set('connected'));
     socket.on('disconnect', () => this._status.set('disconnected'));
@@ -67,10 +62,9 @@ export class SocketService {
 
   /** Tears down the socket; no automatic reconnection afterwards. */
   public disconnect(): void {
-    if (this.socket) {
-      this.socket.disconnect();
-      this.socket = null;
-    }
+    this._socket()?.disconnect();
+    this._socket.set(null);
+
     this._status.set('disconnected');
   }
 
@@ -79,25 +73,23 @@ export class SocketService {
    * `event`. The underlying socket listener is removed on unsubscribe.
    */
   public on<T>(event: string): Observable<T> {
-    return new Observable<T>((subscriber) => {
-      const socket = this.socket;
-      if (!socket) {
-        subscriber.complete();
-        return;
-      }
-
-      const handler = (payload: T): void => subscriber.next(payload);
-      socket.on(event, handler);
-
-      return () => {
-        socket.off(event, handler);
-      };
-    });
+    return this.socket$.pipe(
+      switchMap((socket) =>
+        socket
+          ? new Observable<T>((sub) => {
+              const handler = (payload: T) => sub.next(payload);
+              socket.on(event, handler);
+              return () => socket.off(event, handler);
+            })
+          : EMPTY,
+      ),
+    );
   }
 
   /** Forwards to `socket.emit`. No-op if not connected. */
   public emit<T>(event: string, payload: T): void {
-    this.socket?.emit(event, payload);
+    const socket = this._socket();
+    socket?.emit(event, payload);
   }
 
   /**
@@ -110,7 +102,7 @@ export class SocketService {
     payload: unknown,
     timeoutMs: number = DEFAULT_ACK_TIMEOUT_MS,
   ): Promise<AckResult<T>> {
-    const socket = this.socket;
+    const socket = this._socket();
     if (!socket) {
       return { ok: false, error: 'Socket is not connected' };
     }
