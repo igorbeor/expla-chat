@@ -2,6 +2,9 @@
 
 A real-time chat application built as an **Nx monorepo** with an **Angular** client and a **NestJS** server, sharing a common TypeScript contract library for end-to-end type safety.
 
+> [!IMPORTANT]
+> **Testing with more than one user?** Identity (name + avatar) is generated once and kept in `localStorage`, which the browser **shares across all tabs and windows**. So opening a new tab or window registers a *new* online user but with the **same `name` and `avatarUrl`** as the first one. This is by design — the task required persisting that profile in `localStorage`. To appear as a genuinely different person, open the app in an **incognito/private window** (or a different browser): each gets its own `localStorage`, and therefore its own identity.
+
 ## Tech stack
 
 - **Monorepo:** Nx
@@ -73,7 +76,7 @@ All real-time traffic flows over one Socket.io connection handled by a thin `Cha
 - **Presence is per-connection.** A connection equals an online user; opening a new tab/browser appears as a new online user.
 - **`userId` (domain) is separate from `socketId` (transport).** Domain services and bots only ever operate on `userId`.
 - **Profile** (name + avatar) is persisted in `localStorage`; the **session `userId`** lives in `sessionStorage` (per-tab, survives reconnects within the tab).
-- On connect the newcomer receives a `presence:init` bootstrap (`selfId` + the current contact list, including bots); everyone else receives a `presence:joined` delta.
+- On connect the newcomer receives a `presence:init` bootstrap (`selfId` + the current contact list as `Contact[]` — each entry pairing a `User` with its `lastMessage` preview, bots included); everyone else receives a `presence:joined` delta.
 - On disconnect the user is removed after a **grace period** (`GRACE_MS`); a reconnect within that window silently rebinds the socket without a flicker.
 
 ### Messaging
@@ -82,6 +85,7 @@ All real-time traffic flows over one Socket.io connection handled by a thin `Cha
 - Acks for request/response events are wrapped in an `AckResult<T>` envelope (`{ ok, data } | { ok, error }`) so the client always receives a resolvable answer.
 - Delivery to the recipient happens via a separate `message:received` event.
 - History is paginated with **`conversation:history`** (cursor-based by message id, newest → oldest, with `hasMore`).
+- The contact list carries a **last-message preview** per contact (on the shared `Contact` model): `presence:init` seeds it, and inbound (`message:received`) and outbound messages keep it fresh.
 
 ### Bots (always online)
 
@@ -104,8 +108,8 @@ The server uses `@nestjs/event-emitter` as an internal bus to decouple the `Mess
 
 | Event | Direction | Payload |
 |---|---|---|
-| handshake `auth` | client → server | `{ name, avatarUrl, userId? }` |
-| `presence:init` | server → newcomer | `{ selfId, contacts: User[] }` |
+| handshake `auth` | client → server | `{ name, avatarUrl, id? }` |
+| `presence:init` | server → newcomer | `{ selfId, contacts: Contact[] }` |
 | `presence:joined` | server → others | `User` |
 | `presence:disconnected` | server → others | `{ userId }` |
 | `message:send` | client → server (ack) | `{ recipientId, content }` → ack `AckResult<Message>` |
@@ -118,7 +122,7 @@ The server uses `@nestjs/event-emitter` as an internal bus to decouple the `Mess
 
 - **In-memory storage.** Message history and presence are kept in memory; they are cleared on restart. A database is intentionally omitted (allowed by the task). Messages sent to a user during their reconnect grace window are stored but pushed only after the client re-fetches `conversation:history` on reconnect (the server treats its history as the source of truth).
 - **User persistence (localStorage).** A name and placeholder avatar are generated on first visit and reused on subsequent visits. Tabs in the same browser share this profile (a different browser/incognito naturally gets a different identity).
-- **Online vs Away.** A user is `online` while the tab is focused and `away` when it is backgrounded (via the Page Visibility API). This makes the “All / Online only” contact filter meaningful without a database.
+- **Online vs Away.** The protocol carries a per-user `status` (`online` / `away`) over `status:change` → `status:changed`; the client renders it and exposes an “All / Online only” contact filter, so presence is meaningful without a database. The client currently connects as `online` — wiring the Page Visibility API to flip to `away` on tab blur is the intended trigger and is not yet hooked up.
 - **Reconnect trust boundary.** The server never trusts an id supplied by the client, with one documented exception: on reconnect the client presents its previous `userId` (from `sessionStorage`) in the handshake so the server can rebind the session. This is only honoured inside the grace window.
 - **Type safety.** Models, DTO/payload interfaces and event-name maps live in `@chat/api-interfaces` and are consumed by both apps.
 - **Scaling.** A single in-memory instance is sufficient here. For horizontal scaling across multiple instances, a Socket.io **Redis adapter** would be the path forward.
