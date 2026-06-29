@@ -143,6 +143,9 @@ describe('SocketService', () => {
 
     const received: number[] = [];
     service.on<number>('tick').subscribe((v) => received.push(v));
+    // `on()` sources the socket via `toObservable`, which propagates the signal
+    // through an effect; flush it so the underlying socket listener attaches.
+    TestBed.tick();
 
     fakeSocket.trigger('tick', 1);
     fakeSocket.trigger('tick', 2);
@@ -156,6 +159,8 @@ describe('SocketService', () => {
     service.connect(AUTH);
 
     const sub = service.on<number>('tick').subscribe();
+    // Flush the `toObservable` effect so the socket listener is attached.
+    TestBed.tick();
     expect(fakeSocket.listeners.get('tick')?.length).toBe(1);
 
     sub.unsubscribe();
