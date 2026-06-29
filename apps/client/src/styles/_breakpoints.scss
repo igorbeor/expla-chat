@@ -1,0 +1,7 @@
+// SCSS breakpoint tokens. Kept here (not as CSS custom properties) because
+// custom properties cannot be used inside @media queries.
+// Usage in a component stylesheet:
+//   @use 'breakpoints' as bp;
+//   @media (max-width: bp.$breakpoint-mobile) { ... }
+
+$breakpoint-mobile: 768px;
