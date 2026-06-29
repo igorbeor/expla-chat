@@ -147,11 +147,11 @@ describe('ChatGateway (integration)', () => {
 
       expect(init.selfId).toMatch(UUID_RE);
       expect(init.contacts).toHaveLength(4);
-      expect(init.contacts.every((c) => c.type === UserTypes.BOT)).toBe(true);
-      expect(init.contacts.map((c) => c.name).sort()).toEqual(
+      expect(init.contacts.every((c) => c.user.type === UserTypes.BOT)).toBe(true);
+      expect(init.contacts.map((c) => c.user.name).sort()).toEqual(
         Object.values(BotNames).slice().sort(),
       );
-      expect(init.contacts.some((c) => c.id === init.selfId)).toBe(false);
+      expect(init.contacts.some((c) => c.user.id === init.selfId)).toBe(false);
     });
 
     it('existing clients receive presence:joined for a newcomer', async () => {
@@ -524,9 +524,9 @@ describe('ChatGateway (integration)', () => {
 
   describe('Bots', () => {
     const botId = (init: PresenceInitEvent, type: BotTypes): string => {
-      const bot = init.contacts.find((c) => c.name === BotNames[type]);
+      const bot = init.contacts.find((c) => c.user.name === BotNames[type]);
       if (!bot) throw new Error(`bot "${type}" not seeded`);
-      return bot.id;
+      return bot.user.id;
     };
 
     it('message to Echo bot → sender receives the same content back', async () => {
