@@ -17,7 +17,6 @@ import { RelativeTimePipe } from '../pipes/relative-time.pipe';
   styleUrl: './contact-item.scss',
 })
 export class ContactItem {
-  // public readonly contact = input.required<Contact>();
   public readonly name = input.required<string>();
   public readonly avatarUrl = input.required<string>();
   public readonly status = input.required<UserStatuses>();

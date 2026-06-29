@@ -6,7 +6,7 @@
   (click)="selectContact.emit()"
 >
   <span class="contact-item__avatar">
-    <app-avatar [avatarUrl]="avatarUrl()" [name]="name()" />
+    <app-avatar [avatarUrl]="avatarUrl()" [name]="name()" [size]="48" />
     @if (status() === UserStatuses.ONLINE) {
       <span class="contact-item__presence" aria-label="Online"></span>
     }
