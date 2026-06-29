@@ -20,6 +20,6 @@
   </span>
 
   @if (contact().lastMessage; as last) {
-    <span class="contact-item__time">{{ last.sentAt | relativeTime }}</span>
+    <span class="contact-item__time">{{ last.sentAt | relativeTime: currentTime() }}</span>
   }
 </button>

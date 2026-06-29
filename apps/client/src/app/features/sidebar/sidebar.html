@@ -4,10 +4,11 @@
 </header>
 
 <div class="sidebar__list">
-  @for (item of list(); track item.user.id) {
+  @for (item of list(); track item.user.id + item.lastMessage?.sentAt) {
     <app-contact-item
       [contact]="item"
       [selected]="item.user.id === selectedId()"
+      [currentTime]="currentTime()"
       (selectContact)="onSelect(item.user.id)"
     />
   } @empty {

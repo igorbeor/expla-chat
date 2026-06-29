@@ -10,13 +10,16 @@ const DAY = 24 * HOUR;
  */
 @Pipe({ name: 'relativeTime' })
 export class RelativeTimePipe implements PipeTransform {
-  public transform(value: string | null | undefined): string {
+  public transform(
+    value: string | null | undefined,
+    currentTime: Date,
+  ): string {
     if (!value) return '';
 
     const then = new Date(value).getTime();
     if (Number.isNaN(then)) return '';
 
-    const diff = Date.now() - then;
+    const diff = currentTime.getTime() - then;
     if (diff < MINUTE) return 'now';
     if (diff < HOUR) return `${Math.floor(diff / MINUTE)}m`;
     if (diff < DAY) return `${Math.floor(diff / HOUR)}h`;

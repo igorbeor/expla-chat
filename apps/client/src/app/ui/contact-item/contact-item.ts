@@ -19,6 +19,7 @@ import { RelativeTimePipe } from '../pipes/relative-time.pipe';
 })
 export class ContactItem {
   public readonly contact = input.required<ContactWithLastMessage>();
+  public readonly currentTime = input.required<Date>();
   public readonly selected = input<boolean>(false);
   public readonly selectContact = output<void>();
 
