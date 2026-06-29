@@ -35,7 +35,7 @@ export class Sidebar {
   public readonly currentTime = signal<Date>(new Date());
 
   constructor() {
-    interval(10_000)
+    interval(60_000)
       .pipe(takeUntilDestroyed())
       .subscribe(() => {
         this.currentTime.set(new Date());
