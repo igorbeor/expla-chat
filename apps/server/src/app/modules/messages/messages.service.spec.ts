@@ -186,7 +186,7 @@ describe('MessagesService', () => {
     });
 
     // Limit clamping is enforced by the ConversationHistoryRequest DTO, not the
-    // service — covered by the DTO validation suite (test plan §6), not here.
+    // service — covered by the DTO validation suite, not here.
     it.todo('clamps limit to the server max (DTO responsibility, not the service)');
 
     it('returns { messages: [], hasMore: false } when the cursor id is not found', () => {
