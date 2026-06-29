@@ -1,0 +1,29 @@
+<button
+  type="button"
+  class="chat-header__back"
+  aria-label="Back to chats"
+  (click)="back.emit()"
+>
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+    <path
+      d="M15 5l-7 7 7 7"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+</button>
+
+<app-avatar [avatarUrl]="contact().avatarUrl" [name]="contact().name" [size]="44" />
+
+<div class="chat-header__info">
+  <span class="chat-header__name">{{ contact().name }}</span>
+  <span class="chat-header__status">
+    <span
+      class="chat-header__dot"
+      [class.chat-header__dot--online]="isOnline()"
+    ></span>
+    {{ statusLabel() }}
+  </span>
+</div>

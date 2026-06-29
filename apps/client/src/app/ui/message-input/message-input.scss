@@ -1,0 +1,56 @@
+:host {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--color-bg-app);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: border-color 0.15s ease;
+}
+
+:host:focus-within {
+  border-color: var(--color-accent);
+}
+
+.message-input__field {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-height: 120px;
+  padding: var(--space-2);
+  border: none;
+  outline: none;
+  background: transparent;
+  resize: none;
+  font-family: inherit;
+  font-size: var(--font-size-md);
+  line-height: 1.35;
+  color: var(--color-text-primary);
+}
+
+.message-input__field::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.message-input__send {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.message-input__send:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

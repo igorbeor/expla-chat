@@ -1,0 +1,25 @@
+<button
+  type="button"
+  class="contact-item"
+  [class.contact-item--selected]="selected()"
+  [attr.aria-current]="selected() ? 'true' : null"
+  (click)="selectContact.emit()"
+>
+  <span class="contact-item__avatar">
+    <app-avatar [avatarUrl]="contact().user.avatarUrl" [name]="contact().user.name" />
+    @if (contact().user.status === UserStatuses.ONLINE) {
+      <span class="contact-item__presence" aria-label="Online"></span>
+    }
+  </span>
+
+  <span class="contact-item__body">
+    <span class="contact-item__name">{{ contact().user.name }}</span>
+    @if (contact().lastMessage; as last) {
+      <span class="contact-item__preview">{{ last.content }}</span>
+    }
+  </span>
+
+  @if (contact().lastMessage; as last) {
+    <span class="contact-item__time">{{ last.sentAt | relativeTime }}</span>
+  }
+</button>

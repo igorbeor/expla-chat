@@ -1,0 +1,18 @@
+<button
+  type="button"
+  class="filter-toggle__option"
+  [class.filter-toggle__option--active]="filter() === 'all'"
+  [attr.aria-pressed]="filter() === 'all'"
+  (click)="filterChange.emit('all')"
+>
+  All users
+</button>
+<button
+  type="button"
+  class="filter-toggle__option"
+  [class.filter-toggle__option--active]="filter() === 'online'"
+  [attr.aria-pressed]="filter() === 'online'"
+  (click)="filterChange.emit('online')"
+>
+  Online users
+</button>

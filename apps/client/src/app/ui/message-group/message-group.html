@@ -1,0 +1,7 @@
+<app-avatar class="message-group__avatar" [avatarUrl]="avatarUrl()" [size]="32" />
+
+<div class="message-group__bubbles">
+  @for (message of messages(); track message.id) {
+    <div class="message-group__bubble">{{ message.content }}</div>
+  }
+</div>
