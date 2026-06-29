@@ -1,0 +1,28 @@
+@if (interlocutor(); as contact) {
+  <app-chat-header [contact]="contact" (back)="onBack()" />
+
+  <div #stream class="chat__stream" (scroll)="onScroll()">
+    @if (conversation.loading() && groups().length) {
+      <p class="chat__loading">Loading earlier messages…</p>
+    }
+
+    @for (group of groups(); track group.messages[0].id) {
+      <app-message-group
+        [messages]="group.messages"
+        [isOwn]="group.senderId === selfId()"
+        [avatarUrl]="avatarFor(group.senderId)"
+      />
+    } @empty {
+      <p class="chat__hint">No messages yet — say hello 👋</p>
+    }
+  </div>
+
+  <div class="chat__composer">
+    <app-message-input (send)="onSend($event)" />
+  </div>
+} @else {
+  <div class="chat__empty">
+    <p class="chat__empty-title">Select a chat</p>
+    <p class="chat__empty-sub">Choose a contact to start messaging</p>
+  </div>
+}
