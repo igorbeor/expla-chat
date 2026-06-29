@@ -34,20 +34,11 @@
   white-space: pre-wrap;
 }
 
-/* Tail-shaping: flatten the inner corner nearest the avatar. */
-.message-group__bubble:first-child {
-  border-top-left-radius: var(--radius-sm);
-}
-
 :host(.message-group--own) .message-group__bubble {
   background: var(--color-bubble-sent);
   color: var(--color-accent-contrast);
 }
 
-:host(.message-group--own) .message-group__bubble:first-child {
-  border-top-left-radius: var(--radius-md);
-  border-top-right-radius: var(--radius-sm);
-}
 
 @media (max-width: bp.$breakpoint-mobile) {
   :host {
