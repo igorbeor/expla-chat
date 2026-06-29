@@ -6,7 +6,10 @@
 <div class="sidebar__list">
   @for (item of list(); track item.user.id + item.lastMessage?.sentAt) {
     <app-contact-item
-      [contact]="item"
+      [name]="item.user.name"
+      [avatarUrl]="item.user.avatarUrl"
+      [status]="item.user.status"
+      [lastMessage]="item.lastMessage"
       [selected]="item.user.id === selectedId()"
       [currentTime]="currentTime()"
       (selectContact)="onSelect(item.user.id)"
