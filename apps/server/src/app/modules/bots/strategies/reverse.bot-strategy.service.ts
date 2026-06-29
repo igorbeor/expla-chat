@@ -19,6 +19,6 @@ export class ReverseBotStrategyService implements BotStrategy {
   }
 
   private getReverseString(value: string): string {
-    return value.split('').reverse().join('');
+    return [...value].reverse().join('');
   }
 }
